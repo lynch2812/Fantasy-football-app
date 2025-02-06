@@ -2,12 +2,19 @@
 <h1>Enter Results</h1>
 <form method="POST">
   {% for match in matches %}
-  <label for="result_{{ match.id }}">Result for {{ match.team_1 }} vs {{ match.team_2 }}:</label>
-  <input type="text" name="result_{{ match.id }}" required>
+  <div>
+    <label for="result_{{ match.id }}">Result for {{ match.team_1 }} vs {{ match.team_2 }}:</label>
+    <select name="result_{{ match.id }}" required>
+      <option value="">-- Select --</option>
+      <option value="Home Win">Home Win</option>
+      <option value="Away Win">Away Win</option>
+      <option value="Draw">Draw</option>
+    </select>
+  </div>
   {% endfor %}
   <input type="submit" value="Update Results">
 </form>
 
-<!-- Add a "Back to Home" button -->
+<!--"Back to Home" button -->
 <a href="{{ url_for('home') }}"><button>Back to Home</button></a>
 <a href="{{ url_for('predict') }}"><button>Make Predictions</button></a>

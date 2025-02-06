@@ -1,0 +1,19 @@
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+
+# Ignore virtual environment
+venv/
+
+# Ignore database files
+*.db
+
+# Ignore environment variables
+.env
+
+# Ignore MacOS system files
+.DS_Store
+
+# Ignore instance folder (stores private configs)
+instance/
+

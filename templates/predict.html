@@ -35,11 +35,11 @@
 
                 <!-- Prediction dropdown -->
                 <label for="prediction_{{ match.id }}">Prediction:</label>
-                <select name="prediction_{{ match.id }}">
+                <select name="prediction_{{ match.id }}" required>
                     <option value="">-- Select --</option>
-                    <option value="win">Home Win</option>
-                    <option value="draw">Draw</option>
-                    <option value="loss">Away Win</option>
+                    <option value="Home Win">Home Win</option>
+                    <option value="Away Win">Away Win</option>
+                    <option value="Draw">Draw</option>
                 </select>
             </div>
         {% endfor %}

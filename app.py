@@ -4,13 +4,13 @@ from flask_login import UserMixin, LoginManager, login_user, login_required, cur
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
-# Initialize Flask app
+# Initialises Flask app
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Database file
 app.config['SECRET_KEY'] = 'your_secret_key'  # Secret key for security
 db = SQLAlchemy(app)
 
-# Initialize Login Manager
+# Initialises Login Manager
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # Route for login page
 
@@ -42,7 +42,7 @@ class Prediction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     prediction = db.Column(db.String(10), nullable=False)  # win, draw, loss
 
-# Load user for Flask-Login
+# Load user for the Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
@@ -91,7 +91,7 @@ def register():
             flash('Email already exists!', 'danger')
             return redirect(url_for('register'))
 
-        # Create new user
+        # Creates new user
         user = User(username=username, email=email)
         user.set_password(password)
         db.session.add(user)
@@ -128,7 +128,7 @@ def predict():
         selected_matches = request.form.getlist('selected_matches')  # List of selected match IDs
         for match_id in selected_matches:
             prediction_value = request.form.get(f'prediction_{match_id}')
-            if prediction_value:
+            if prediction_value in ['Home Win', 'Away Win', 'Draw']:  # Validate the prediction
                 # Save the prediction to the database
                 prediction = Prediction(
                     match_id=match_id,
@@ -136,6 +136,10 @@ def predict():
                     prediction=prediction_value
                 )
                 db.session.add(prediction)
+            else:
+                flash(f"Invalid prediction for match {match_id}. Must be 'Home Win', 'Away Win', or 'Draw'.", "danger")
+                return redirect(url_for('predict'))
+        
         db.session.commit()
         flash('Predictions submitted successfully!', 'success')
         return redirect(url_for('predict'))
@@ -144,7 +148,6 @@ def predict():
     matches = Match.query.order_by(Match.date).all()
     return render_template('predict.html', matches=matches)
 
-# Results Route
 @app.route('/results')
 @login_required
 def results():
@@ -153,12 +156,14 @@ def results():
     
     # Create a dictionary to store match details and predictions
     user_results = {}
+    match_results = {}
     for prediction in user_predictions:
         match = Match.query.get(prediction.match_id)
         match_name = f"{match.team_1} vs {match.team_2} ({match.date.strftime('%Y-%m-%d %H:%M')})"
         user_results[match_name] = prediction.prediction
+        match_results[match_name] = match.result  # Add match result to the dictionary
     
-    return render_template('results.html', user_results=user_results)
+    return render_template('results.html', user_results=user_results, match_results=match_results)
 
 # Admin Matches Route
 @app.route('/admin/matches', methods=['GET', 'POST'])
@@ -202,8 +207,12 @@ def enter_results():
     if request.method == 'POST':
         for match in matches:
             result = request.form.get(f'result_{match.id}')
-            if result:
+            if result in ['Home Win', 'Away Win', 'Draw']:  # Validate the result
                 match.result = result
+            else:
+                flash(f"Invalid result for {match.team_1} vs {match.team_2}. Must be 'Home Win', 'Away Win', or 'Draw'.", "danger")
+                return redirect(url_for('enter_results'))
+        
         db.session.commit()
         flash("Results updated successfully!", "success")
         return redirect(url_for('enter_results'))

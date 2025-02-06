@@ -1,3 +1,4 @@
+<!-- results.html -->
 {% extends 'base.html' %}
 
 {% block content %}
@@ -7,11 +8,13 @@
     <tr>
         <th>Match</th>
         <th>Your Prediction</th>
+        <th>Result</th>
     </tr>
     {% for match, prediction in user_results.items() %}
     <tr>
         <td>{{ match }}</td>
         <td>{{ prediction }}</td>
+        <td>{{ match_results.get(match, 'Not available') }}</td>
     </tr>
     {% endfor %}
 </table>
