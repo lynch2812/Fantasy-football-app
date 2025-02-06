@@ -1,0 +1,20 @@
+<!-- admin_matches.html -->
+<h1>Manage Matches</h1>
+<form method="POST">
+    {% for i in range(1, 11) %}  <!-- Allow up to 10 matches -->
+        <div>
+            <h4>Match {{ i }}</h4>
+            <label for="team_1_{{ i }}">Team 1:</label>
+            <input type="text" name="team_1_{{ i }}" required>
+            <label for="team_2_{{ i }}">Team 2:</label>
+            <input type="text" name="team_2_{{ i }}" required>
+            <label for="date_{{ i }}">Date (YYYY-MM-DD HH:MM):</label>
+            <input type="text" name="date_{{ i }}" required>
+        </div>
+    {% endfor %}
+    <input type="submit" value="Update Matches">
+</form>
+
+<!-- Add a "Back to Home" button -->
+<a href="{{ url_for('home') }}"><button>Back to Home</button></a>
+<a href="{{ url_for('predict') }}"><button>Make Predictions</button></a>

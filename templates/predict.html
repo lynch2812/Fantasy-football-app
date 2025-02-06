@@ -1,0 +1,61 @@
+<!-- predict.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make Predictions</title>
+    <script>
+        function limitSelection() {
+            let checkboxes = document.querySelectorAll('input[name="selected_matches"]');
+            let selectedCount = document.querySelectorAll('input[name="selected_matches"]:checked').length;
+
+            checkboxes.forEach(checkbox => {
+                if (selectedCount >= 5 && !checkbox.checked) {
+                    checkbox.disabled = true;
+                } else {
+                    checkbox.disabled = false;
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <h2>Make Your Predictions</h2>
+    <p>Select exactly 5 matches to predict.</p>
+
+    <form method="POST">
+        {% for match in matches %}
+            <div>
+                <h4>{{ match.team_1 }} vs {{ match.team_2 }} ({{ match.date.strftime('%Y-%m-%d %H:%M') }})</h4>
+
+                <!-- Checkbox to select match -->
+                <input type="checkbox" name="selected_matches" value="{{ match.id }}" onchange="limitSelection()">
+                <label>Select this match</label>
+
+                <!-- Prediction dropdown -->
+                <label for="prediction_{{ match.id }}">Prediction:</label>
+                <select name="prediction_{{ match.id }}">
+                    <option value="">-- Select --</option>
+                    <option value="win">Home Win</option>
+                    <option value="draw">Draw</option>
+                    <option value="loss">Away Win</option>
+                </select>
+            </div>
+        {% endfor %}
+        
+        <br>
+        <button type="submit">Submit Predictions</button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('results') }}">View Results</a>
+
+    <!-- Add Admin Buttons (visible only to admins) -->
+    {% if current_user.is_admin %}
+        <br><br>
+        <a href="{{ url_for('manage_matches') }}"><button>Admin Matches</button></a>
+        <a href="{{ url_for('enter_results') }}"><button>Admin Results</button></a>
+    {% endif %}
+</body>
+</html>

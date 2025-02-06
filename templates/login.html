@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Login</h2>
+<form action="/login" method="POST">
+    <div class="form-group">
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" name="username" required class="form-control"><br><br>
+    </div>
+    
+    <div class="form-group">
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" required class="form-control"><br><br>
+    </div>
+    
+    <div>
+        <input type="submit" value="Login" class="btn btn-primary">
+    </div>
+</form>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="alert alert-danger mt-3">
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endwith %}
+
+<p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+{% endblock %}
+
