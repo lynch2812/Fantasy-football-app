@@ -21,6 +21,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)  # Admin flag
+    points = db.Column(db.Integer, default=0)  # Points field
     predictions = db.relationship('Prediction', backref='user', lazy=True)
 
     def check_password(self, password):
@@ -209,16 +210,49 @@ def enter_results():
             result = request.form.get(f'result_{match.id}')
             if result in ['Home Win', 'Away Win', 'Draw']:  # Validate the result
                 match.result = result
+                
+                # Calculate points for users who predicted this match
+                predictions = Prediction.query.filter_by(match_id=match.id).all()
+                for prediction in predictions:
+                    user = User.query.get(prediction.user_id)
+                    if prediction.prediction == result:
+                        user.points += 3  # Award 3 points for correct prediction
+                    else:
+                        user.points += 0  # No points for incorrect prediction
             else:
                 flash(f"Invalid result for {match.team_1} vs {match.team_2}. Must be 'Home Win', 'Away Win', or 'Draw'.", "danger")
                 return redirect(url_for('enter_results'))
         
         db.session.commit()
-        flash("Results updated successfully!", "success")
+        flash("Results and points updated successfully!", "success")
         return redirect(url_for('enter_results'))
     
     return render_template('admin_results.html', matches=matches)
 
+# Leaderboard Route
+@app.route('/leaderboard')
+@login_required
+def leaderboard():
+    # Fetch all users ordered by points (descending)
+    users = User.query.order_by(User.points.desc()).all()
+    return render_template('leaderboard.html', users=users)
+@app.route('/create_admin')
+def create_admin():
+    username = 'admin'  # Replace with your desired admin username
+    email = 'admin@example.com'  # Replace with your desired admin email
+    password = 'admin_password'  # Replace with your desired admin password
+
+    # Check if the admin user already exists
+    if User.query.filter_by(username=username).first():
+        return 'Admin user already exists!'
+
+    # Create the admin user
+   # admin = User(username=username, email=email, is_admin=True)
+   # admin.set_password(password)
+    #db.session.add(admin)
+   # db.session.commit()
+
+   # return 'Admin user created successfully!'
 # Run the app
 if __name__ == '__main__':
     with app.app_context():
