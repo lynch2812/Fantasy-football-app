@@ -15,15 +15,17 @@
                 <tr>
                     <th>Rank</th>
                     <th>Username</th>
-                    <th>Points</th>
+                    <th>Total Points</th>
+                    <th>Latest Points Accrued</th>
                 </tr>
             </thead>
             <tbody>
-                {% for user in users %}
+                {% for user in leaderboard_data %}
                 <tr>
                     <td>{{ loop.index }}</td>  <!-- Rank -->
                     <td>{{ user.username }}</td>
-                    <td>{{ user.points }}</td>
+                    <td>{{ user.total_points }}</td>
+                    <td>{{ user.latest_points }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

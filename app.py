@@ -163,16 +163,22 @@ def results():
     # Fetch the current user's predictions
     user_predictions = Prediction.query.filter_by(user_id=current_user.id).all()
     
-    # Create a dictionary to store match details and predictions
+    # Create a dictionary to store match details, predictions, and results
     user_results = {}
     match_results = {}
+    latest_points = 0  # Track the latest points accrued
+
     for prediction in user_predictions:
         match = Match.query.get(prediction.match_id)
         match_name = f"{match.team_1} vs {match.team_2} ({match.date.strftime('%Y-%m-%d %H:%M')})"
         user_results[match_name] = prediction.prediction
-        match_results[match_name] = match.result  # Add match result to the dictionary
-    
-    return render_template('results.html', user_results=user_results, match_results=match_results)
+        match_results[match_name] = match.result
+
+        # Calculate latest points accrued
+        if match.result and prediction.prediction == match.result:
+            latest_points += 3  # Award 3 points for correct prediction
+
+    return render_template('results.html', user_results=user_results, match_results=match_results, latest_points=latest_points)
 
 # Admin Matches Route
 @app.route('/admin/matches', methods=['GET', 'POST'])
@@ -246,7 +252,24 @@ def enter_results():
 def leaderboard():
     # Fetch all users ordered by points (descending)
     users = User.query.order_by(User.points.desc()).all()
-    return render_template('leaderboard.html', users=users)
+
+    # Calculate latest points accrued for each user
+    leaderboard_data = []
+    for user in users:
+        latest_points = 0
+        user_predictions = Prediction.query.filter_by(user_id=user.id).all()
+        for prediction in user_predictions:
+            match = Match.query.get(prediction.match_id)
+            if match.result and prediction.prediction == match.result:
+                latest_points += 3  # Award 3 points for correct prediction
+
+        leaderboard_data.append({
+            'username': user.username,
+            'total_points': user.points,
+            'latest_points': latest_points
+        })
+
+    return render_template('leaderboard.html', leaderboard_data=leaderboard_data)
 @app.route('/create_admin')
 def create_admin():
     username = 'admin'  # Replace with your desired admin username
