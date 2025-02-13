@@ -1,4 +1,3 @@
-<!-- predict.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,9 +11,9 @@
 
             checkboxes.forEach(checkbox => {
                 if (selectedCount >= 5 && !checkbox.checked) {
-                    checkbox.disabled = true;
+                    checkbox.disabled = true; // Disable unchecked checkboxes if 5 are selected
                 } else {
-                    checkbox.disabled = false;
+                    checkbox.disabled = false; // Re-enable checkboxes if fewer than 5 are selected
                 }
             });
         }
@@ -24,7 +23,7 @@
     <h2>Make Your Predictions</h2>
     <p>Select exactly 5 matches to predict.</p>
 
-    <form method="POST">
+    <form method="POST" action="{{ url_for('predict') }}">
         {% for match in matches %}
             <div>
                 <h4>{{ match.team_1 }} vs {{ match.team_2 }} ({{ match.date.strftime('%Y-%m-%d %H:%M') }})</h4>
@@ -33,9 +32,9 @@
                 <input type="checkbox" name="selected_matches" value="{{ match.id }}" onchange="limitSelection()">
                 <label>Select this match</label>
 
-                <!-- Prediction dropdown -->
+                <!-- Prediction dropdown (only required if match is selected) -->
                 <label for="prediction_{{ match.id }}">Prediction:</label>
-                <select name="prediction_{{ match.id }}" required>
+                <select name="prediction_{{ match.id }}">
                     <option value="">-- Select --</option>
                     <option value="Home Win">Home Win</option>
                     <option value="Away Win">Away Win</option>

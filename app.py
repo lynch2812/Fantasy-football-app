@@ -127,6 +127,8 @@ def predict():
     if request.method == 'POST':
         # Get selected matches and predictions
         selected_matches = request.form.getlist('selected_matches')  # List of selected match IDs
+        predictions_submitted = 0  # Counter for submitted predictions
+
         for match_id in selected_matches:
             prediction_value = request.form.get(f'prediction_{match_id}')
             if prediction_value in ['Home Win', 'Away Win', 'Draw']:  # Validate the prediction
@@ -137,10 +139,16 @@ def predict():
                     prediction=prediction_value
                 )
                 db.session.add(prediction)
+                predictions_submitted += 1
             else:
                 flash(f"Invalid prediction for match {match_id}. Must be 'Home Win', 'Away Win', or 'Draw'.", "danger")
                 return redirect(url_for('predict'))
-        
+
+        # Check if at least 5 predictions were submitted
+        if predictions_submitted < 5:
+            flash("You must submit predictions for at least 5 matches.", "danger")
+            return redirect(url_for('predict'))
+
         db.session.commit()
         flash('Predictions submitted successfully!', 'success')
         return redirect(url_for('predict'))
@@ -215,10 +223,14 @@ def enter_results():
                 predictions = Prediction.query.filter_by(match_id=match.id).all()
                 for prediction in predictions:
                     user = User.query.get(prediction.user_id)
-                    if prediction.prediction == result:
-                        user.points += 3  # Award 3 points for correct prediction
+                    if user:  # Check if the user exists
+                        if prediction.prediction == result:
+                            user.points += 3  # Award 3 points for correct prediction
+                        else:
+                            user.points += 0  # No points for incorrect prediction
                     else:
-                        user.points += 0  # No points for incorrect prediction
+                        flash(f"User with ID {prediction.user_id} not found for prediction {prediction.id}.", "danger")
+                        return redirect(url_for('enter_results'))
             else:
                 flash(f"Invalid result for {match.team_1} vs {match.team_2}. Must be 'Home Win', 'Away Win', or 'Draw'.", "danger")
                 return redirect(url_for('enter_results'))
@@ -228,7 +240,6 @@ def enter_results():
         return redirect(url_for('enter_results'))
     
     return render_template('admin_results.html', matches=matches)
-
 # Leaderboard Route
 @app.route('/leaderboard')
 @login_required
@@ -253,8 +264,33 @@ def create_admin():
    # db.session.commit()
 
    # return 'Admin user created successfully!'
+@app.route('/admin/clear_predictions_and_results', methods=['POST'])
+@login_required
+def clear_predictions_and_results():
+    if not current_user.is_admin:
+        flash("Access denied!", "danger")
+        return redirect(url_for('home'))
+
+    try:
+        # Clear the predictions table
+        Prediction.query.delete()
+
+        # Clear the results in the matches table (set result to NULL)
+        matches = Match.query.all()
+        for match in matches:
+            match.result = None
+
+        db.session.commit()
+        flash("Predictions and results cleared successfully! Points from previous rounds are retained.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"An error occurred: {str(e)}", "danger")
+
+    return redirect(url_for('enter_results'))
 # Run the app
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # Create database tables
         app.run(host='0.0.0.0', port=5000, debug=True)  # Run the app in debug mode
+        
+
